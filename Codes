@@ -1,0 +1,589 @@
+# Load packages 
+library(Seurat)
+library(monocle3)
+library(escape)
+library(escape)
+library(dplyr)
+library(SingleR)
+library(celldex)
+library(ggplot2)
+library(scDblFinder)
+library(scRNAseq)
+library(viridis)
+library(dittoSeq)
+library(RColorBrewer)
+library(ggpubr)
+colorblind_vector <- colorRampPalette(c("#FF4B20", "#FFB433", "#C6FDEC", "#7AC5FF", "#0348A6"))
+
+# Load scRNA-seq data
+JSS1.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/JSS/outs/per_sample_outs/JSS_1/count/sample_feature_bc_matrix/")
+JSS2.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/JSS/outs/per_sample_outs/JSS_2/count/sample_feature_bc_matrix/")
+JSS3.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/JSS/outs/per_sample_outs/JSS_3/count/sample_feature_bc_matrix/")
+JSS4.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/JSS/outs/per_sample_outs/JSS_4/count/sample_feature_bc_matrix/")
+Non_JSS1.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/Non_JSS/outs/per_sample_outs/Non_JSS_1/count/sample_feature_bc_matrix/")
+Non_JSS2.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/Non_JSS/outs/per_sample_outs/Non_JSS_2/count/sample_feature_bc_matrix/")
+Non_JSS3.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/Non_JSS/outs/per_sample_outs/Non_JSS_3/count/sample_feature_bc_matrix/")
+Non_JSS4.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/Non_JSS/outs/per_sample_outs/Non_JSS_4/count/sample_feature_bc_matrix/")
+BP1.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/BP/outs/per_sample_outs/BP_1/count/sample_feature_bc_matrix/")
+BP2.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/BP/outs/per_sample_outs/BP_2/count/sample_feature_bc_matrix/")
+BPRP1.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/BP/outs/per_sample_outs/BP_3/count/sample_feature_bc_matrix/")
+BP4.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/BP/outs/per_sample_outs/BP_4/count/sample_feature_bc_matrix/")
+BP3.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/BPRP/outs/per_sample_outs/BPRP_1/count/sample_feature_bc_matrix/")
+BPRP2.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/BPRP/outs/per_sample_outs/BPRP_2/count/sample_feature_bc_matrix/")
+BPRP3.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/BPRP/outs/per_sample_outs/BPRP_3/count/sample_feature_bc_matrix/")
+BPRP4.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/BPRP/outs/per_sample_outs/BPRP_4/count/sample_feature_bc_matrix/")
+HC1.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/HC/outs/per_sample_outs/HC_1/count/sample_feature_bc_matrix/")
+HC2.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/HC/outs/per_sample_outs/HC_2/count/sample_feature_bc_matrix/")
+HC3.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/HC/outs/per_sample_outs/HC_3/count/sample_feature_bc_matrix/")
+HC4.data <- Read10X(data.dir = "/orange/zhangw/my.kim/sjogren/HC/outs/per_sample_outs/HC_4/count/sample_feature_bc_matrix/")
+
+# Creat seurat subject with subset
+JSS1 <- CreateSeuratObject(counts = JSS1.data$`Gene Expression`, project = "JSS1")
+JSS1$Subset <- "cSjD"
+JSS1$Subset2 <- "cSjD"
+JSS1$Subset3 <- "cSjD"
+JSS1$Subset4 <- "Bx"
+JSS1$Subset5 <- "Non-RP"
+
+JSS2 <- CreateSeuratObject(counts = JSS2.data$`Gene Expression`, project = "JSS2")
+JSS2$Subset <- "cSjD"
+JSS2$Subset2 <- "cSjD"
+JSS2$Subset3 <- "cSjD"
+JSS2$Subset4 <- "Bx"
+JSS2$Subset5 <- "Non-RP"
+
+JSS3 <- CreateSeuratObject(counts = JSS3.data$`Gene Expression`, project = "JSS3")
+JSS3$Subset <- "cSjD"
+JSS3$Subset2 <- "cSjDRP"
+JSS3$Subset3 <- "cSjD"
+JSS3$Subset4 <- "Bx"
+JSS3$Subset5 <- "RP"
+
+
+JSS4 <- CreateSeuratObject(counts = JSS4.data$`Gene Expression`, project = "JSS4")
+JSS4$Subset <- "cSjD"
+JSS4$Subset2 <- "cSjDRP"
+JSS4$Subset3 <- "cSjD"
+JSS4$Subset4 <- "Bx"
+JSS4$Subset5 <- "RP"
+
+Non_JSS1 <- CreateSeuratObject(counts = Non_JSS1.data$`Gene Expression`, project = "Non_JSS1")
+Non_JSS1$Subset <- "Non-cSjD"
+Non_JSS1$Subset2 <- "Non-cSjD"
+Non_JSS1$Subset3 <- "Non-cSjD"
+Non_JSS1$Subset4 <- "Non-cSjD"
+Non_JSS1$Subset5 <- "Non-cSjD"
+
+Non_JSS2 <- CreateSeuratObject(counts = Non_JSS2.data$`Gene Expression`, project = "Non_JSS2")
+Non_JSS2$Subset <- "Non-cSjD"
+Non_JSS2$Subset2 <- "Non-cSjD"
+Non_JSS2$Subset3 <- "Non-cSjD"
+Non_JSS2$Subset4 <- "Non-cSjD"
+Non_JSS2$Subset5 <- "Non-cSjD"
+
+Non_JSS3 <- CreateSeuratObject(counts = Non_JSS3.data$`Gene Expression`, project = "Non_JSS3")
+Non_JSS3$Subset <- "Non-cSjD"
+Non_JSS3$Subset2 <- "Non-cSjD"
+Non_JSS3$Subset3 <- "Non-cSjD"
+Non_JSS3$Subset4 <- "Non-cSjD"
+Non_JSS3$Subset5 <- "Non-cSjD"
+
+Non_JSS4 <- CreateSeuratObject(counts = Non_JSS4.data$`Gene Expression`, project = "Non_JSS4")
+Non_JSS4$Subset <- "Non-cSjD"
+Non_JSS4$Subset2 <- "Non-cSjD"
+Non_JSS4$Subset3 <- "Non-cSjD"
+Non_JSS4$Subset4 <- "Non-cSjD"
+Non_JSS4$Subset5 <- "Non-cSjD"
+
+HC1 <- CreateSeuratObject(counts = HC1.data$`Gene Expression`, project = "HC1")
+HC1$Subset <- "HC"
+HC1$Subset2 <- "HC"
+HC1$Subset3 <- "HC"
+HC1$Subset4 <- "HC"
+HC1$Subset5 <- "HC"
+
+HC2 <- CreateSeuratObject(counts = HC2.data$`Gene Expression`, project = "HC2")
+HC2$Subset <- "HC"
+HC2$Subset2 <- "HC"
+HC2$Subset3 <- "HC"
+HC2$Subset4 <- "HC"
+HC2$Subset5 <-"HC"
+
+HC3 <- CreateSeuratObject(counts = HC3.data$`Gene Expression`, project = "HC3")
+HC3$Subset <- "HC"
+HC3$Subset2 <- "HC"
+HC3$Subset3 <- "HC"
+HC3$Subset4 <- "HC"
+HC3$Subset5 <- "HC"
+
+HC4 <- CreateSeuratObject(counts = HC4.data$`Gene Expression`, project = "HC4")
+HC4$Subset <- "HC"
+HC4$Subset2 <- "HC"
+HC4$Subset3 <- "HC"
+HC4$Subset4 <- "HC"
+HC4$Subset5 <- "HC"
+
+BP1 <- CreateSeuratObject(counts = BP1.data$`Gene Expression`, project = "BP1")
+BP1$Subset <- "Bx"
+BP1$Subset2 <- "Bx"
+BP1$Subset3 <- "Bx"
+BP1$Subset4 <- "Bx"
+BP1$Subset5 <-"Non-RP"
+
+BP2 <- CreateSeuratObject(counts = BP2.data$`Gene Expression`, project = "BP2")
+BP2$Subset <- "Bx"
+BP2$Subset2 <- "Bx"
+BP2$Subset3 <- "Bx"
+BP2$Subset4 <- "Bx"
+BP2$Subset5 <- "Non-RP"
+
+BP3 <- CreateSeuratObject(counts = BP3.data$`Gene Expression`, project = "BP3")
+BP3$Subset <- "Bx"
+BP3$Subset2 <- "Bx"
+BP3$Subset3 <- "Bx"
+BP3$Subset4 <- "Bx"
+BP3$Subset5 <- "Non-RP"
+
+BP4 <- CreateSeuratObject(counts = BP4.data$`Gene Expression`, project = "BP4")
+BP4$Subset <- "Bx"
+BP4$Subset2 <- "Bx"
+BP4$Subset3 <- "Bx"
+BP4$Subset4 <- "Bx"
+BP4$Subset5 <- "Non-RP"
+
+BPRP1 <- CreateSeuratObject(counts = BPRP1.data$`Gene Expression`, project = "BPRP1")
+BPRP1$Subset <- "BxRP"
+BPRP1$Subset2 <- "BxRP"
+BPRP1$Subset3 <- "Bx"
+BPRP1$Subset4 <- "Bx"
+BPRP1$Subset5 <- "RP"
+
+BPRP2 <- CreateSeuratObject(counts = BPRP2.data$`Gene Expression`, project = "BPRP2")
+BPRP2$Subset <- "BxRP"
+BPRP2$Subset2 <- "BxRP"
+BPRP2$Subset3 <- "Bx"
+BPRP2$Subset4 <- "Bx"
+BPRP2$Subset5 <- "RP"
+
+BPRP3 <- CreateSeuratObject(counts = BPRP3.data$`Gene Expression`, project = "BPRP3")
+BPRP3$Subset <- "BxRP"
+BPRP3$Subset2 <- "BxRP"
+BPRP3$Subset3 <- "Bx"
+BPRP3$Subset4 <- "Bx"
+BPRP3$Subset5 <- "RP"
+
+BPRP4 <- CreateSeuratObject(counts = BPRP4.data$`Gene Expression`, project = "BPRP4")
+BPRP4$Subset <- "BxRP"
+BPRP4$Subset2 <- "BxRP"
+BPRP4$Subset3 <- "Bx"
+BPRP4$Subset4 <- "Bx"
+BPRP4$Subset5 <- "RP"
+
+# Data integration
+JSS.BIG <-merge(JSS1, y = c(JSS2, JSS3, JSS4, Non_JSS1, Non_JSS2, Non_JSS3, Non_JSS4, HC1, HC2, HC3, HC4, BP1, BP2, BP3, BP4, BPRP1, BPRP2, BPRP3, BPRP4), add.cell.ids = c("JSS1", "JSS2", "JSS3", "JSS4", "Non_JSS1", "Non_JSS2", "Non_JSS3", "Non_JSS4", "HC1", "HC2", "HC3", "HC4", "BP1", "BP2", "BP3", "BP4", "BPRP1", "BPRP2","BPRP3","BPRP4"), project = "JSS.ALL")
+JSS.BIG[["percent.mt"]] <- PercentageFeatureSet(JSS.BIG, pattern = "^MT-")
+VlnPlot(JSS.BIG, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, pt.size = 0)
+JSS.BIG <-subset(JSS.BIG, subset = nFeature_RNA > 200 & nFeature_RNA < 4000 & percent.mt <10)
+VlnPlot(JSS.BIG, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3, pt.size = 0)
+
+JSS_list <- SplitObject(JSS.BIG, split.by = "orig.ident")
+JSS_list <- lapply(X = JSS_list, FUN = function(x) {
+  x <- NormalizeData(x)
+  x <- FindVariableFeatures(x, nfeatures = 3000)})
+features <- SelectIntegrationFeatures(object.list = JSS_list)
+JSS.anchors <- FindIntegrationAnchors(object.list = JSS_list, anchor.features = features)
+JSS.combined <- IntegrateData(anchorset = JSS.anchors)
+
+DefaultAssay(JSS.combined) <- "integrated"
+JSS.combined <-ScaleData(JSS.combined, verbose = FALSE)
+JSS.combined <-RunPCA(JSS.combined, npcs = 30, verbose = FALSE)
+JSS.combined <-RunUMAP(JSS.combined, reduction = "pca", dims = 1:30)
+JSS.combined <-RunTSNE(JSS.combined, reduction = "pca", dims = 1:30)
+JSS.combined <- JackStraw(JSS.combined, num.replicate = 100)
+JSS.combined <- ScoreJackStraw(JSS.combined, dims = 1:20)
+JackStrawPlot(JSS.combined, reduction = "pca", dims = 1:20, ymax = 1, xmax = 1)# +NoLegend()
+ElbowPlot(JSS.combined, ndims = 30)
+JSS.combined <- FindNeighbors(JSS.combined, reduction = "pca", dims = 1:30)
+JSS.combined <- FindClusters(JSS.combined, resolution = 1.2)
+DefaultAssay(JSS.combined) <- "RNA"
+JSS.combined <-ScaleData(JSS.combined, verbose = FALSE)
+
+# singleR for cell type annotation
+hpca <- SingleR(test =as.SingleCellExperiment(JSS.combined), ref = hpca, labels = hpca$label.fine, assay.type.test=1)
+monaco <- SingleR(test =as.SingleCellExperiment(JSS.combined), ref = monaco, labels = monaco$label.fine, assay.type.test=1)
+immune <- SingleR(test =as.SingleCellExperiment(JSS.combined), ref = immune, labels = immune$label.fine, assay.type.test=1)
+
+JSS.combined <- AddMetaData(JSS.combined, metadata = hpca$labels, col.name = "hpca")
+JSS.combined <- AddMetaData(JSS.combined, metadata = monaco$labels, col.name = "monaco")
+JSS.combined <- AddMetaData(JSS.combined, metadata = immune$labels, col.name = "immune")
+
+DimPlot(JSS.combined, reduction = "tsne", group.by  = "northprint", label = T, shuffle = T, repel = T,
+        cols = colorRampPalette(brewer.pal(8, "Set1"))(29)) 
+
+meta3 <- monaco$scores
+rownames(meta3) <- rownames(monaco)
+meta3 <- as.data.frame(meta3)
+JSS.combined <- AddMetaData(JSS.combined, metadata = meta3)
+
+meta4 <- hpca$scores
+rownames(meta4) <- rownames(hpca)
+meta4 <- as.data.frame(meta4)
+JSS.combined <- AddMetaData(JSS.combined, metadata = meta4)
+
+meta5 <- immune$scores
+rownames(meta5) <- rownames(immune)
+meta5 <- as.data.frame(meta5)
+JSS.combined <- AddMetaData(JSS.combined, metadata = meta5)
+
+meta <- JSS.combined@meta.data
+meta <- meta[,c(8,21,22,23,28,35,36,37,40,41,44,45,47:50,55,168,170,171,172,177)] 
+heatmap <- meta %>% group_by(seurat_clusters) %>% summarise(across(1:21, mean)) 
+heatmap <- as.data.frame(heatmap) #
+
+rownames(heatmap)
+rownames(heatmap) <- paste0("C", 0:28) # 45rownames will be generated as X1, X2, ..., X22: ORIGINAL should be 5, RP should be 6
+
+#annotation and heatmap matrix; separate cluster and subset from pathway values 
+headers <- heatmap[,1] # Column selection for all rows. First and second columns selected for all rows, and this is the header
+heatmap <- heatmap[,c(2,5:13,15:17)] # Column selection for all rows. It should be the step to determine the values for heatmap
+
+normalize <- function(x)
+{
+  (x- min(x)) /(max(x)-min(x))
+} 
+heatmap2 <- sapply(heatmap, normalize)
+heatmap2  <- heatmap2 [,colSums(is.na(heatmap2 ))<nrow(heatmap2)]
+rownames(heatmap2) <- paste0("C", 0:28)
+pdf("/blue/zhangw/my.kim/Cha/Final/singleR.pdf", width = 8, height = 5)
+pheatmap::pheatmap(t(heatmap2), scale = "none", show_colnames = T, 
+                   cluster_cols= T, 
+                   annotation_colors = colors, fontsize = 12, cluster_rows = T,
+                   legend = T, legend_labels = T, annotation_legend = T, 
+                   color = rev(colorRampPalette(brewer.pal(10,"RdYlBu"))(100)),
+                   cellwidth = 10, cellheight = 12)
+dev.off()
+
+# Subclsutering and doublet removal
+JSS.combined.CD4 <- subset(JSS.combined, idents = c("0","4","15","3","5","7","14")) 
+DefaultAssay(JSS.combined.CD4) <- "integrated"
+JSS.combined.CD4 <-ScaleData(JSS.combined.CD4, verbose = FALSE)
+JSS.combined.CD4 <-RunPCA(JSS.combined.CD4, npcs = 30, verbose = FALSE)
+JSS.combined.CD4 <-RunUMAP(JSS.combined.CD4, reduction = "pca", dims = 1:30)
+JSS.combined.CD4 <-RunTSNE(JSS.combined.CD4, reduction = "pca", dims = 1:30)
+JSS.combined.CD4 <- FindNeighbors(JSS.combined.CD4, reduction = "pca", dims = 1:30)
+JSS.combined.CD4 <- FindClusters(JSS.combined.CD4, resolution = 0.4)
+DefaultAssay(JSS.combined.CD4) <- "RNA"
+
+sce <- as.SingleCellExperiment(JSS.combined.CD4) 
+sce <- scDblFinder(sce)
+doublets <- data.frame(db.weight.score = sce$scDblFinder.weighted,
+                       db.class = sce$scDblFinder.class,
+                       db.score = sce$scDblFinder.score)
+rownames(doublets) <- rownames(sce@colData)
+JSS.combined.CD4 <- AddMetaData(JSS.combined.CD4, doublets)
+
+JSS.combined.CD4.singlet <- subset(JSS.combined.CD4, subset = db.class == c("singlet"))
+DefaultAssay(JSS.combined.CD4.singlet) <- "integrated"
+JSS.combined.CD4.singlet <-ScaleData(JSS.combined.CD4.singlet, verbose = FALSE)
+JSS.combined.CD4.singlet <-RunPCA(JSS.combined.CD4.singlet, npcs = 30, verbose = FALSE)
+JSS.combined.CD4.singlet <-RunUMAP(JSS.combined.CD4.singlet, reduction = "pca", dims = 1:30)
+JSS.combined.CD4.singlet <- RunTSNE(JSS.combined.CD4.singlet, dims = 1:30, reduction = "pca")
+JSS.combined.CD4.singlet <- FindNeighbors(JSS.combined.CD4.singlet, reduction = "pca", dims = 1:30)
+JSS.combined.CD4.singlet <- FindClusters(JSS.combined.CD4.singlet, resolution = 0.6)
+DefaultAssay(JSS.combined.CD4.singlet) <- "RNA"
+JSS.combined.CD4.singlet <-ScaleData(JSS.combined.CD4.singlet, verbose = FALSE)
+
+CD4.doublet.percentage <- table(Idents(JSS.combined.CD4), JSS.combined.CD4$db.class)
+write.table(CD4.doublet.percentage, file="/blue/zhangw/my.kim/Cha/Final/CD4/CD4.20.doublet.percentage.csv", sep = ",", append=F)
+
+Cellnumbers.subset <- table(Idents(JSS.combined.CD4.singlet),JSS.combined.CD4.singlet$orig.ident)
+write.table(Cellnumbers.subset,
+            file="/blue/zhangw/my.kim/Cha/Final/CD4/Cell_Number_CD4_20_orig.ident.csv", sep = ",", append=F)
+
+JSS.combined.CD8 <- subset(JSS.combined, idents = c("1","7","10","11","13","15"))
+DefaultAssay(JSS.combined.CD8) <- "integrated"
+JSS.combined.CD8 <-ScaleData(JSS.combined.CD8, verbose = FALSE)
+JSS.combined.CD8 <-RunPCA(JSS.combined.CD8, npcs = 30, verbose = FALSE)
+JSS.combined.CD8 <-RunUMAP(JSS.combined.CD8, reduction = "pca", dims = 1:30)
+JSS.combined.CD8 <-RunTSNE(JSS.combined.CD8, reduction = "pca", dims = 1:30)
+JSS.combined.CD8 <- FindNeighbors(JSS.combined.CD8, reduction = "pca", dims = 1:30)
+JSS.combined.CD8 <- FindClusters(JSS.combined.CD8, resolution = 0.3)
+
+DefaultAssay(JSS.combined.CD8) <- "RNA"
+sce <- as.SingleCellExperiment(JSS.combined.CD8) 
+sce <- scDblFinder(sce)
+doublets <- data.frame(db.weight.score = sce$scDblFinder.weighted,
+                       db.class = sce$scDblFinder.class, 
+                       db.score = sce$scDblFinder.score)
+rownames(doublets) <- rownames(sce@colData)
+JSS.combined.CD8 <- AddMetaData(JSS.combined.CD8, doublets)
+
+JSS.combined.CD8.singlet <- subset(JSS.combined.CD8, subset = db.class == c("singlet"))
+DefaultAssay(JSS.combined.CD8.singlet) <- "integrated"
+JSS.combined.CD8.singlet <-ScaleData(JSS.combined.CD8.singlet, verbose = FALSE)
+JSS.combined.CD8.singlet <-RunPCA(JSS.combined.CD8.singlet, npcs = 30, verbose = FALSE)
+JSS.combined.CD8.singlet <-RunUMAP(JSS.combined.CD8.singlet, reduction = "pca", dims = 1:30)
+JSS.combined.CD8.singlet <- RunTSNE(JSS.combined.CD8.singlet, dims = 1:30, reduction = "pca")
+JSS.combined.CD8.singlet <- FindNeighbors(JSS.combined.CD8.singlet, reduction = "pca", dims = 1:30)
+JSS.combined.CD8.singlet <- FindClusters(JSS.combined.CD8.singlet, resolution = 0.4)
+DefaultAssay(JSS.combined.CD8.singlet) <- "RNA"
+JSS.combined.CD8.singlet <-ScaleData(JSS.combined.CD8.singlet, verbose = FALSE)
+
+CD8.doublet.percentage <- table(Idents(JSS.combined.CD8), JSS.combined.CD8$db.class)
+write.table(CD8.doublet.percentage, file="/blue/zhangw/my.kim/Final/CD8/CD8.doublet.percentage.csv", sep = ",", append=F)
+
+Cellnumbers.subset <- table(Idents(JSS.combined.CD8.singlet),JSS.combined.CD8.singlet$orig.ident)
+write.table(Cellnumbers.subset,
+            file="/blue/zhangw/my.kim/Cha/Final/CD8/Cell_Number_CD8_orig.ident.csv", sep = ",", append=F)
+
+JSS.combined.B <- subset(JSS.combined, idents = c("2", "12","27" , "29"))
+DefaultAssay(JSS.combined.B) <- "integrated"
+JSS.combined.B <-ScaleData(JSS.combined.B, verbose = FALSE)
+JSS.combined.B <-RunPCA(JSS.combined.B, npcs = 30, verbose = FALSE)
+JSS.combined.B <-RunUMAP(JSS.combined.B, reduction = "pca", dims = 1:30)
+JSS.combined.B <-RunTSNE(JSS.combined.B, reduction = "pca", dims = 1:30)
+JSS.combined.B <- FindNeighbors(JSS.combined.B, reduction = "pca", dims = 1:30)
+JSS.combined.B <- FindClusters(JSS.combined.B, resolution = 1)
+
+DefaultAssay(JSS.combined.B) <- "RNA"
+sce <- as.SingleCellExperiment(JSS.combined.B)
+sce <- scDblFinder(sce)
+doublets <- data.frame(db.weight.score = sce$scDblFinder.weighted,
+                       db.class = sce$scDblFinder.class, 
+                       db.score = sce$scDblFinder.score)
+rownames(doublets) <- rownames(sce@colData)
+JSS.combined.B <- AddMetaData(JSS.combined.B, doublets)
+JSS.combined.B.singlet <- subset(JSS.combined.B, subset = db.class == c("singlet"))
+DefaultAssay(JSS.combined.B.singlet) <- "integrated"
+
+JSS.combined.B.singlet <-ScaleData(JSS.combined.B.singlet, verbose = FALSE)
+JSS.combined.B.singlet <-RunPCA(JSS.combined.B.singlet, npcs = 30, verbose = FALSE)
+JSS.combined.B.singlet <-RunUMAP(JSS.combined.B.singlet, reduction = "pca", dims = 1:30)
+JSS.combined.B.singlet <-RunTSNE(JSS.combined.B.singlet, reduction = "pca", dims = 1:30)
+JSS.combined.B.singlet <- FindNeighbors(JSS.combined.B.singlet, reduction = "pca", dims = 1:30)
+JSS.combined.B.singlet <- FindClusters(JSS.combined.B.singlet, resolution = 1.0)
+DefaultAssay(JSS.combined.B.singlet) <- "RNA"
+JSS.combined.B.singlet <-ScaleData(JSS.combined.B.singlet, verbose = FALSE)
+
+B.doublet.percentage <- table(Idents(JSS.combined.B), JSS.combined.B$db.class)
+write.table(B.doublet.percentage, file="/blue/zhangw/my.kim/Cha/Final/B/B.doublet.percentage.csv", sep = ",", append=F)
+
+Cellnumbers.subset <- table(Idents(JSS.combined.B.singlet),JSS.combined.B.singlet$orig.ident)
+write.table(Cellnumbers.subset,
+            file="/blue/zhangw/my.kim/Cha/Final/B/Cell_Number_B_orig.ident.csv", sep = ",", append=F)
+
+JSS.combined.myeloid <- subset(JSS.combined, idents = c("9", "21","24","25"))
+DefaultAssay(JSS.combined.myeloid) <- "integrated"
+JSS.combined.myeloid <-ScaleData(JSS.combined.myeloid, verbose = FALSE)
+JSS.combined.myeloid <-RunPCA(JSS.combined.myeloid, npcs = 30, verbose = FALSE)
+JSS.combined.myeloid <-RunUMAP(JSS.combined.myeloid, reduction = "pca", dims = 1:30)
+JSS.combined.myeloid <-RunTSNE(JSS.combined.myeloid, reduction = "pca", dims = 1:30)
+JSS.combined.myeloid <- FindNeighbors(JSS.combined.myeloid, reduction = "pca", dims = 1:30)
+JSS.combined.myeloid <- FindClusters(JSS.combined.myeloid, resolution = 0.3)
+DefaultAssay(JSS.combined.myeloid) <- "RNA"
+
+sce <- as.SingleCellExperiment(JSS.combined.myeloid)
+sce <- scDblFinder(sce)
+doublets <- data.frame(db.weight.score = sce$scDblFinder.weighted,
+                       db.class = sce$scDblFinder.class, 
+                       db.score = sce$scDblFinder.score)
+rownames(doublets) <- rownames(sce@colData)
+JSS.combined.myeloid <- AddMetaData(JSS.combined.myeloid, doublets)
+JSS.combined.myeloid.singlet <- subset(JSS.combined.myeloid, subset = db.class == c("singlet"))
+
+DefaultAssay(JSS.combined.myeloid.singlet) <- "integrated"
+JSS.combined.myeloid.singlet <-ScaleData(JSS.combined.myeloid.singlet, verbose = FALSE)
+JSS.combined.myeloid.singlet <-RunPCA(JSS.combined.myeloid.singlet, npcs = 30, verbose = FALSE)
+JSS.combined.myeloid.singlet <-RunUMAP(JSS.combined.myeloid.singlet, reduction = "pca", dims = 1:30)
+JSS.combined.myeloid.singlet <- RunTSNE(JSS.combined.myeloid.singlet, dims = 1:30, reduction = "pca")
+JSS.combined.myeloid.singlet <- FindNeighbors(JSS.combined.myeloid.singlet, reduction = "pca", dims = 1:30)
+JSS.combined.myeloid.singlet <- FindClusters(JSS.combined.myeloid.singlet, resolution = 0.3)
+DefaultAssay(JSS.combined.myeloid.singlet) <- "RNA"
+JSS.combined.myeloid.singlet <-ScaleData(JSS.combined.myeloid.singlet, verbose = FALSE)
+
+saveRDS(JSS.combined.myeloid.singlet, "/blue/zhangw/my.kim/Cha/Final/BPspecific2/JSS.combined.myeloid.singlet.rds")
+myeloid.percentage <- table(Idents(JSS.combined.myeloid), JSS.combined.myeloid$db.class)
+write.table(myeloid.percentage, file="/blue/zhangw/my.kim/Cha/Final/myeloid.doublet.percentage.csv", sep = ",", append=F)
+
+Cellnumbers.subset <- table(Idents(JSS.combined.myeloid.singlet),JSS.combined.myeloid.singlet$orig.ident)
+write.table(Cellnumbers.subset,
+            file="/blue/zhangw/my.kim/Cha/Final/Myeloid/Cell_Number_myeloid_orig.ident.csv", sep = ",", append=F)
+
+JSS.combined.CD8NK <- subset(JSS.combined, idents = c("1","22","8","17","10","13","11","6","16","20")) 
+DefaultAssay(JSS.combined.CD8NK) <- "integrated"
+JSS.combined.CD8NK <-ScaleData(JSS.combined.CD8NK, verbose = FALSE)
+JSS.combined.CD8NK <-RunPCA(JSS.combined.CD8NK, npcs = 30, verbose = FALSE)
+JSS.combined.CD8NK <-RunUMAP(JSS.combined.CD8NK, reduction = "pca", dims = 1:30)
+JSS.combined.CD8NK <-RunTSNE(JSS.combined.CD8NK, reduction = "pca", dims = 1:30)
+JSS.combined.CD8NK <- FindNeighbors(JSS.combined.CD8NK, reduction = "pca", dims = 1:30)
+JSS.combined.CD8NK <- FindClusters(JSS.combined.CD8NK, resolution = 0.3)
+
+DefaultAssay(JSS.combined.CD8NK) <- "RNA"
+sce <- as.SingleCellExperiment(JSS.combined.CD8NK) 
+sce <- scDblFinder(sce)
+doublets <- data.frame(db.weight.score = sce$scDblFinder.weighted,
+                       db.class = sce$scDblFinder.class, 
+                       db.score = sce$scDblFinder.score)
+rownames(doublets) <- rownames(sce@colData)
+JSS.combined.CD8NK <- AddMetaData(JSS.combined.CD8NK, doublets)
+
+JSS.combined.CD8NK.singlet <- subset(JSS.combined.CD8NK, subset = db.class == c("singlet"))
+DefaultAssay(JSS.combined.CD8NK.singlet) <- "integrated"
+JSS.combined.CD8NK.singlet <-ScaleData(JSS.combined.CD8NK.singlet, verbose = FALSE)
+JSS.combined.CD8NK.singlet <-RunPCA(JSS.combined.CD8NK.singlet, npcs = 30, verbose = FALSE)
+JSS.combined.CD8NK.singlet <-RunUMAP(JSS.combined.CD8NK.singlet, reduction = "pca", dims = 1:30)
+JSS.combined.CD8NK.singlet <- RunTSNE(JSS.combined.CD8NK.singlet, dims = 1:30, reduction = "pca")
+JSS.combined.CD8NK.singlet <- FindNeighbors(JSS.combined.CD8NK.singlet, reduction = "pca", dims = 1:30)
+JSS.combined.CD8NK.singlet <- FindClusters(JSS.combined.CD8NK.singlet, resolution = 0.4)
+DefaultAssay(JSS.combined.CD8NK.singlet) <- "RNA"
+JSS.combined.CD8NK.singlet <-ScaleData(JSS.combined.CD8NK.singlet, verbose = FALSE)
+
+CD8NK.doublet.percentage <- table(Idents(JSS.combined.CD8NK), JSS.combined.CD8NK$db.class)
+write.table(CD8NK.doublet.percentage, file="/blue/zhangw/my.kim/Cha/Final/CD8NK.doublet.percentage.csv", sep = ",", append=F)
+
+DimPlot(JSS.combined.CD8NK.singlet, label = T, reduction = "tsne", group.by = "Subset4")
+Cellnumbers.subset <- table(Idents(JSS.combined.CD8NK.singlet),JSS.combined.CD8NK.singlet$orig.ident)
+write.table(Cellnumbers.subset,
+            file="/blue/zhangw/my.kim/Cha/Final/CD8NK/Cell_Number_CD8NK_orig.ident.csv", sep = ",", append=F)
+saveRDS(JSS.combined.CD8NK.singlet, "/blue/zhangw/my.kim/Cha/Final/JSS.combined.CD8NK.singlet.rds")
+
+# GSEA
+#
+sign <- read.delim("/blue/zhangw/my.kim/Cha/5groups/immune_sign_myeloid_final.txt")
+sign <- read.delim("/blue/zhangw/my.kim/Cha/5groups/immune_sign_CD4_final.txt")
+sign <- read.delim("/blue/zhangw/my.kim/Cha/5groups/immune_sign_CD8_final.txt")
+sign <- read.delim("/blue/zhangw/my.kim/Cha/5groups/immune_sign_NK_final.txt")
+sign <- read.delim("/blue/zhangw/my.kim/Cha/5groups/immune_sign_B_final.txt")
+sign <- read.delim("/blue/zhangw/my.kim/Cha/5groups/immune_sign_CD8NK_final.txt")
+sign <- read.delim("/blue/zhangw/my.kim/Cha/5groups/immune_sign_Immune_final.txt")
+
+full <- as.list(sign)
+unique <- names(full) 
+list <- list()
+for (i in seq_along(unique)) {
+  tmp <- full[[i]]
+  tmp <- tmp[tmp != ""]
+  tmp <- unique(toupper(tmp))
+  tmp <- GSEABase::GeneSet(tmp, setName=paste(unique[i]))
+  list[[i]] <- tmp}
+list <- GSEABase::GeneSetCollection(list)
+
+#
+ES.immune.B <- enrichIt(obj = JSS.combined.B.singlet, gene.sets = list, groups = 1000, cores = 4)
+ES.immune.NK <- enrichIt(obj = JSS.combined.NK.singlet, gene.sets = list, groups = 1000, cores = 4)
+ES.immune.myeloid <- enrichIt(obj = JSS.combined.myeloid.singlet, gene.sets = list, groups = 1000, cores = 4)
+ES.immune.CD8 <- enrichIt(obj = JSS.combined.CD8.singlet, gene.sets = list, groups = 1000, cores = 4)
+ES.immune.CD4 <- enrichIt(obj = JSS.combined.CD4.singlet, gene.sets = list, groups = 1000, cores = 4)
+ES.immune.CD8NK <- enrichIt(obj = JSS.combined.CD8NK.singlet, gene.sets = list, groups = 1000, cores = 4)
+
+saveRDS(ES.immune.B, "/blue/zhangw/my.kim/Cha/Final/BPspecific/ES.immune.B.rds")
+saveRDS(ES.immune.NK, "/blue/zhangw/my.kim/Cha/Final/ES.immune.NK.rds")
+saveRDS(ES.immune.CD4, "/blue/zhangw/my.kim/Cha/Final/ES.immune.CD4.20.rds")
+saveRDS(ES.immune.CD4, "/blue/zhangw/my.kim/Cha/Final/BPspecific/ES.immune.CD4.rds")
+saveRDS(ES.immune.CD8, "/blue/zhangw/my.kim/Cha/Final/ES.immune.CD8.rds")
+saveRDS(ES.immune.myeloid, "/blue/zhangw/my.kim/Cha/Final/BPspecific/ES.immune.myeloid.rds")
+saveRDS(ES.immune.CD8NK, "/blue/zhangw/my.kim/Cha/Final/BPspecific/ES.immune.CD8NK.rds")
+saveRDS(ES.immune.CD8NK, "/blue/zhangw/my.kim/Cha/Final/ES.immune.selected.CD8NK.rds")
+
+#
+JSS.combined.B.singlet <- AddMetaData(JSS.combined.B.singlet, ES.immune.B) 
+JSS.combined.NK.singlet <- AddMetaData(JSS.combined.NK.singlet, ES.immune.NK) 
+JSS.combined.CD4.singlet <- AddMetaData(JSS.combined.CD4.singlet, ES.immune.CD4) 
+JSS.combined.CD8.singlet <- AddMetaData(JSS.combined.CD8.singlet, ES.immune.CD8) 
+JSS.combined.myeloid.singlet <- AddMetaData(JSS.combined.myeloid.singlet, ES.immune.myeloid)
+JSS.combined.CD8NK.singlet <- AddMetaData(JSS.combined.CD8NK.singlet, ES.immune.CD8NK)
+
+JSS.combined.CD4.singlet.20 <- AddMetaData(JSS.combined.CD4.singlet.20, ES.immune.CD4.20) 
+
+#
+JSS.combined.myeloid.singlet <- AddMetaData(JSS.combined.myeloid.singlet, ES.immune.myeloid)
+
+JSS.combined.myeloid.singlet$Subset <- factor(JSS.combined.myeloid.singlet$Subset,
+                                              levels = c("Bx", "BxRP", "cSjD","HC","Non-cSjD"))
+JSS.combined.CD4.singlet$Subset <- factor(JSS.combined.CD4.singlet$Subset,
+                                              levels = c("Bx", "BxRP", "cSjD","HC","Non-cSjD"))
+
+meta <- JSS.combined.CD4.singlet[[]]
+meta$seurat_clusters <- JSS.combined.CD4.singlet@active.ident
+ncol(meta)
+meta <- meta[,c(4,8,17:67)]
+heatmap <- meta %>% group_by(seurat_clusters, Subset) %>% summarise(across(1:51, mean))
+heatmap <- as.data.frame(heatmap)
+
+write.table(heatmap, file="/blue/zhangw/my.kim/Cha/Final/Myeloid/GSEA_results_Myeloid_orig.ident.csv", sep = ",", append=F)
+
+#
+p <- ggplot(meta, aes(Subset, M1_Macrophage, fill = Subset))
+p + geom_violin(draw_quantiles = c(.25, .50, .75)) + geom_boxplot(width = 0.2) +
+  scale_fill_manual(values=c("#FF4B20", "#FFB433", "#7AC5FF", "#C6FDEC", "#0348A6")) +
+  theme(legend.position="none") +
+  theme_bw() +
+  theme_classic()  +
+  #geom_jitter(shape=1, position=position_jitter(0.05)) +
+  theme(axis.text.x = element_text(color = "grey20", size = 10, angle = 0, hjust = .5, vjust = .5, face = "plain"),
+        axis.text.y = element_text(color = "grey20", size = 10, angle = 0, hjust = 1, vjust = 0, face = "plain"),
+        axis.title.x = element_text(color = "grey20", size = 12, angle = 0, hjust = .5, vjust = .5, face = "plain"),
+        axis.title.y = element_text(color = "grey20", size = 12, angle = 90, hjust = .5, vjust = .5, face = "plain"))
+ggsave("/blue/zhangw/my.kim/Cha/Final/Myeloid/M1_All_myeloid.png", width = 3.2, height = 2)
+
+#
+meta.Non_JSS <- meta[meta$Subset =="Non-cSjD",]
+meta.BPRP <- meta[meta$Subset =="BxRP",]
+meta.BP <- meta[meta$Subset =="Bx",]
+meta.HC <- meta[meta$Subset =="HC",]
+meta.JSS <- meta[meta$Subset =="cSjD",]
+
+meta.Non_JSS <- meta.Non_JSS[meta.Non_JSS$seurat_clusters =="5",]
+meta.BPRP <- meta.BPRP[meta.BPRP$seurat_clusters =="5",]
+meta.BP <- meta.BP[meta.BP$seurat_clusters =="5",]
+meta.HC <- meta.HC[meta.HC$seurat_clusters =="5",]
+meta.JSS <- meta.JSS[meta.JSS$seurat_clusters =="5",]
+
+t.test(meta.HC$M1_Macrophage, meta.BP$M1_Macrophage, conf.level = 0.95, var.equal = T)
+
+p <- ggplot(meta, aes(Subset, M1_Macrophage, fill = Subset))
+p + geom_violin(draw_quantiles = c(.25, .50, .75)) + geom_boxplot(width = 0.2) +
+  scale_fill_manual(values=c("#FF4B20", "#FFB433", "#7AC5FF", "#C6FDEC", "#0348A6")) +
+  theme(legend.position="none") +
+  theme_bw() +
+  theme_classic()  +
+  ylim(0,1) +
+  #geom_jitter(shape=1, position=position_jitter(0.05)) +
+  theme(axis.text.x = element_text(color = "grey20", size = 12, angle = 0, hjust = .5, vjust = .5, face = "plain"),
+        axis.text.y = element_text(color = "grey20", size = 12, angle = 0, hjust = 1, vjust = 0, face = "plain"),
+        axis.title.x = element_text(color = "grey20", size = 12, angle = 0, hjust = .5, vjust = .5, face = "plain"),
+        axis.title.y = element_text(color = "grey20", size = 12, angle = 90, hjust = .5, vjust = .5, face = "plain"))
+ggsave("/blue/zhangw/my.kim/Cha/Final/Myeloid/M1_All_myeloid.png", width = 3.2, height = 2)
+
+#
+rownames(heatmap)
+rownames(heatmap) <- paste0("X", 1:65)
+headers <- heatmap[,1:2]
+heatmap <- heatmap[c(1:50),3:53]
+
+SubsetColors <- c("#FF4B20", "#FFB433", "#C6FDEC", "#7AC5FF","#0348A6")
+names(SubsetColors) <- c("Bx", "BxRP", "HC", "cSjD", "Non-cSjD")
+clusterColors <- c(scales::hue_pal()(13))
+names(clusterColors) <- 0:12
+colors <- list(Subset = SubsetColors, seurat_clusters = clusterColors)
+
+normalize <- function(x)
+{
+  (x- min(x)) /(max(x)-min(x))
+}
+heatmap2 <- sapply(heatmap, normalize)
+heatmap2  <- heatmap2 [,colSums(is.na(heatmap2 ))<nrow(heatmap2)]
+rownames(heatmap2) <- paste0("X", 1:50)
+
+pdf("/blue/zhangw/my.kim/Cha/5groups/myeloid/GSEA_Myeloid_secondary.pdf", width = 10, height =7) #5.5 x 3.8, 9x4
+pheatmap::pheatmap(t(heatmap2), scale = "row", show_colnames = T,
+                   annotation_col = headers,
+                   cluster_cols= F,
+                   annotation_colors = colors, fontsize = 12, cluster_rows =F,
+                   legend = T, legend_labels = T, annotation_legend = T,
+                   cellwidth = 10, 
+                  # cellheight = 12,
+                  # color = rev(colorRampPalette(brewer.pal(10,"RdYlBu"))(100)),
+                   )
+library(RColorBrewer)
+
