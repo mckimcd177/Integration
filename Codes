@@ -866,3 +866,131 @@ JSS.combined.myeloid <- FindClusters(JSS.combined.myeloid, resolution = 0.3)
 DefaultAssay(JSS.combined.myeloid) <- "RNA"
 DimPlot(JSS.combined.myeloid, reduction = "tsne", group.by = "Subset2")
 FeaturePlot(JSS.combined.myeloid, features = "LYZ")
+
+# Gene ontology visualization
+library(ggrepel)
+library(Seurat)
+library(dplyr)
+library(ggrepel)
+library(ggplot2)
+tmp <- read.csv("/Users/raiora 1/Desktop/Final/B/GOterms/B_Clsuter6_cSjDvsHC_panther_nooverlap.csv", header = T, row.names = 1)
+tmp <- read.csv("/Users/raiora 1/Desktop/Final/BPspecific2/GO/GO_NoncSjD_Myeloid_All.csv", header = T, row.names = 1)
+tmp <- read.csv("GO_candidate.csv", header = T, row.names = 1)
+tmp <- read.csv("TNBC_ClusterMarker_2_GO_Enrichment.csv", header = T, row.names = 1)
+
+#
+tmp.scale <- scale(tmp$FC)
+tmp$FC <- tmp.scale
+
+tmp$gene_symbol <- NA
+tmp$gene_symbol <- rownames(tmp)
+
+tmp$diffexpressed <- "None"
+tmp$diffexpressed[tmp$FC > 0 & tmp$FDR < 0.05] <- "Up"
+tmp$diffexpressed[tmp$FC < -0 & tmp$FDR < 0.05] <- "Down"
+
+tmp$tmplabel <- NA
+tmp$tmplabel[tmp$diffexpressed != "None"] <- tmp$gene_symbol[tmp$diffexpressed != "None"] # != not equal to
+
+mycolors <- c("dodgerblue3", "firebrick3", "gray50")
+names(mycolors) <- c("Down", "Up", "None")
+
+knitr_table <- function(x) {
+  x %>%
+    knitr::kable(format = "html", digits = Inf,
+                 format.args = list(big.mark = ",")) %>%
+    kableExtra::kable_styling(font_size = 15) }
+
+top <- 10
+top_genes <- bind_rows(
+  tmp %>%
+    filter(diffexpressed == 'Up') %>%
+    arrange(P, desc(FC)) %>%
+    head(top),
+  tmp %>%
+    filter(diffexpressed == 'Down') %>%
+    arrange(P, desc(FC)) %>%
+    head(top) )
+top_genes %>%
+  knitr_table()
+
+#
+
+ggplot(tmp, aes(x= FC, y=-log10(FDR),col=diffexpressed,  label = gene_symbol)) +
+  geom_point(size = 2/5) +
+  theme_minimal() +
+  theme_classic() +
+  scale_color_manual(values= mycolors) +
+  geom_text_repel(size = 4, data = top_genes)+
+  theme(axis.text.x = element_text(size = 10)) +
+  theme(axis.text.y = element_text(size = 10)) +
+  guides(colour = guide_legend(override.aes = list(size=1.5)))  +
+  geom_vline(xintercept = c(0), lty = 2, col= "black") +
+  geom_hline(yintercept = -log10(0.05), lty = 2, col= "black")+
+  #geom_label_repel(data = top_genes, mapping = aes(FC, -log10(P), label = gene_symbol), max.overlaps = 300, size = 3) +
+#  geom_label_repel(data = tmp[tmp$gene_symbol %in% genes$Genes,], nudge_y = 0.5, nudge_x = 0.5, size = 8, arrow = arrow(length = unit(0.25, "cm"), type = "closed")) +
+  NoLegend()
+ggsave("GO.png", width = 4, height = 3)
+library(ggrepel)
+ggsave("/Users/raiora 1/Desktop/Final/whatmaeksJSSformyeloid.png", width = 1.75, height = 1.75)
+ggsave("/Users/raiora 1/Desktop/Final/B_JSSvsHC_cluster6_GO.png", width = , height = 2.5)
+ggsave("/Users/raiora 1/Desktop/Final/BPspecific/GO enrichment/CD8_C2_BPvsHC_panther.png", width = 2.5, height = 2.5)
+ggsave("/Users/raiora 1/Desktop/Final/B/Cluster6_cSjDvsHC_nolabel.png", width = 5, height = 5)
+
+library(ggrepel)
+genes <- read.csv("/Users/raiora 1/Desktop/Final/CD4/CD4_Pro_Cyto.csv") # CD4_Pro_Cyto.csv , # Keygenes.csv #whatmak
+rownames(genes) <- genes$Genes
+
+
+genes <-
+c("TNFRSF1B" , "SLC2A3" , "TOLLIP",  "RAB10",  "DYNLL1" , "HMOX1",  "CTSH" , "KPNB1" , "TCIRG1"  ,
+  "SLAMF1",  "YPEL5" , "FGL2" , "DBNL"  ,"BLK",  "SDCBP"  ,"RHOF" , "SRP14"  ,"PFKL" , "DEGS1" , "IQGAP2" , "ITGB2",  "MNDA" , "DNASE1L3",
+  "CYBB" , "CCT2" , "PA2G4" , "RASGRP1",  "ANXA2", "SELL",  "CD47" , "SVIP",  "DDX3X" , "TUBB"  ,"SIGLEC14")
+
+
+
+###### GO analysis visualization
+# https://r-graph-gallery.com/barplot.html
+setwd("/Users/raiora 1/Desktop/Final")
+library(pheatmap)
+library(viridis)
+library(RColorBrewer)
+library(ggplot2)
+library(dplyr)
+library(forcats)
+
+#### data preparation
+df <- read.csv("GO_Enrichment_All_Candidates_Combined_Nogenes.csv", header = T)
+nrow(df)
+df <- df[1:8,]
+#### reorder
+df <- df %>%
+  mutate(terms = fct_reorder(GO_Terms, FDR))
+
+#### bar plot
+ggplot(df, aes(x=GO_Terms, y=FDR, fill = FDR)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  coord_flip()
+
+
+library(forcats)
+
+df %>%
+  mutate(terms = fct_reorder(GO_Terms, FC)) %>%
+  ggplot( aes(x=terms, y=FC, fill = FDR)) +
+  geom_bar(stat="identity", fill="firebrick", alpha= 0.7, width= 0.7) + #44AD7C 7DAC1F C29830
+  coord_flip() +
+  xlab("") +
+  theme_bw() +
+  theme(
+    axis.text = element_text(size=10, colour = "black"),
+    axis.title = element_text(size = 10))
+ # scale_x_continuous( breaks = c(20, 40, 10))
+
+ggsave("/Users/raiora 1/Desktop/Final/B/GO_panther_selected_Cluster6.png", width = 7, height = 2.5) # 10 x 2
+
+dev.off()
+
+theme(axis.text=element_text(size=12, colour = "black"),
+      axis.title=element_text(size=14,face="bold"))
+
