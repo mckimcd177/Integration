@@ -1,3 +1,3 @@
 # Integration
 
-Other codes are available from the authors upon request. ![image](https://github.com/mckimcd177/Integration/assets/112354348/00a3dac0-0125-4e20-a409-42cabef0442e)
+Codes for Single-cell transcriptomics unveil profiles and interplay of immune subsets in rare autoimmune childhood Sjögren’s disease![image](https://github.com/mckimcd177/Integration/assets/112354348/47557b08-e9cf-4cde-914f-70049751b3ab)
